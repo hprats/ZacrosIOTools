@@ -35,7 +35,6 @@ class NewKMCJob:
             infile.write('# Hector Prats, PhD                                                        #\n')
             infile.write('############################################################################\n')
 
-
     def write_simulation(self, temperature=300):
         """Description"""
         self.simulation_tags['temperature'] = temperature
