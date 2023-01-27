@@ -30,12 +30,9 @@ class NewKMCJob:
         with open(f"{self.path}/{file_name}", 'w') as infile:
             infile.write('############################################################################\n')
             infile.write('# Zacros Input File generated with the ZacrosIOTools                       #\n')
+            infile.write('# https://github.com/hprats/ZacrosIOTools.git                              #\n')
             infile.write('#                                                                          #\n')
-            infile.write('# Multiscale Computational Catalysis and Materials Science Research Group  #\n')
-            infile.write('# Chemical Engineering Department                                          #\n')
-            infile.write('# University College London                                                #\n')
-            infile.write('#                                                                          #\n')
-            infile.write('# Michail Stamatakis, PhD                                                  #\n')
+            infile.write('# Hector Prats, PhD                                                        #\n')
             infile.write('############################################################################\n')
 
 
