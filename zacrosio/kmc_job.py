@@ -1,65 +1,32 @@
 import os
-import ast
-import sys
-from scipy.constants import pi, N_A, k, h, physical_constants
-from math import sqrt, exp
-
-k_eV = physical_constants["Boltzmann constant in eV/K"][0]
-
-
-def get_q_vib(T, vib_list):
-    q_vib = 1
-    for v in vib_list:
-        q_vib = q_vib * exp(-h * v / (2 * k * T)) / (1 - exp(-h * v / (k * T)))
-    return q_vib
-
-
-def get_q_rot(T, inertia_list, sym_number):
-    if len(inertia_list) == 1:  # linear
-        i = inertia_list[0]
-        q_rot_gas = 8 * pi ** 2 * i * k * T / (sym_number * h ** 2)
-    elif len(inertia_list) == 3:  # non-linear
-        i_a, i_b, i_c = inertia_list[0], inertia_list[1], inertia_list[2]
-        q_rot_gas = (sqrt(pi * i_a * i_b * i_c) / sym_number) * (8 * pi ** 2 * k * T / h ** 2) ** (3 / 2)
-    else:
-        sys.exit(f"Invalid inertia_list")
-    return q_rot_gas
-
-
-def calc_non_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, inertia_list, sym_number):
-    m = molec_mass / 1000 / N_A
-    q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
-    q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
-    q_rot_gas = get_q_rot(T=T, inertia_list=inertia_list, sym_number=sym_number)
-    q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
-    pe_fwd = A_site / sqrt(2 * pi * m * k * T)
-    pe_rev = (q_vib_gas * q_rot_gas * q_trans_2d_gas / q_vib_ads) * (k * T / h)
-    return pe_fwd, pe_rev
-
-
-def calc_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, vib_list_ts, inertia_list, sym_number):
-    m = molec_mass / 1000 / N_A
-    q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
-    q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
-    q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
-    q_rot_gas = get_q_rot(T=T, inertia_list=inertia_list, sym_number=sym_number)
-    q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
-    pe_fwd = (q_vib_ts / (q_vib_gas * q_rot_gas * q_trans_2d_gas)) * (A_site / sqrt(2 * pi * m * k * T))
-    pe_rev = (q_vib_ts / q_vib_ads) * (k * T / h)
-    return pe_fwd, pe_rev
-
-
-def calc_surf_react(T, vib_list_initial, vib_list_ts, vib_list_final):
-    q_vib_initial = get_q_vib(T=T, vib_list=vib_list_initial)
-    q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
-    q_vib_final = get_q_vib(T=T, vib_list=vib_list_final)
-    pe_fwd = (q_vib_ts / q_vib_initial) * (k * T / h)
-    pe_rev = (q_vib_ts / q_vib_final) * (k * T / h)
-    return pe_fwd, pe_rev
+from random import randint
+from zacrosio.functions import *
 
 
 class NewKMCJob:
-    """A class that represents a new KMC job with ZACROS."""
+    """A class that represents a new KMC job with ZACROS.
+
+        Attributes:
+            path (str): The path of the job including the job name. Will be used as the name of the folder.
+            simulation_tags (dict): A dictionary including all tags for the simulation_input.dat except random_seed and
+            temperature.
+            df_mechanism: A Pandas dataframe including the information for the mechanism_input.dat.
+            df_energetics: A Pandas dataframe including the information for the energetics_input.dat.
+            lattice_path (str): The path of the lattice_input.dat (already created).
+
+        Examples:
+        >>> import pandas as pd
+        >>> from zacrosio.kmc_job import NewKMCJob
+        >>> simulation_tags = {'pressure': 1.0, 'n_gas_species': 5}
+        >>> my_job = NewKMCJob(
+        >>>    path='/home/test/my_job',
+        >>>    simulation_tags=simulation_tags,
+        >>>    df_mechanism=pd.read_csv("/home/test/input_files/mechanism.csv", index_col=0),
+        >>>    df_energetics=pd.read_csv("/home/test/input_files/energetics.csv", index_col=0),
+        >>>    lattice_path='/home/test')
+        >>> my_job.create_job_dir(T=300)
+        """
+
     def __init__(self, path, simulation_tags, df_mechanism, df_energetics, lattice_path):
         self.path = path
         self.name = path.split('/')[-1]
@@ -81,10 +48,12 @@ class NewKMCJob:
 
     def write_simulation(self, T=300):
         """Writes the simulation_input.dat file"""
-        self.simulation_tags['temperature'] = T
-        with open(f"{self.path}/simulation_input.dat", 'w') as infile:
+        self.write_header(file_name="simulation_input.dat")
+        with open(f"{self.path}/simulation_input.dat", 'a') as infile:
+            infile.write('random_seed\t'.expandtabs(26) + str(randint(100000, 999999)) + '\n')
+            infile.write('temperature\t'.expandtabs(26) + str(T) + '\n')
             for tag in self.simulation_tags:
-                infile.write(f"{tag} = {self.simulation_tags[tag]}\n")
+                infile.write((tag + '\t').expandtabs(26) + str(self.simulation_tags[tag]) + '\n')
             infile.write(f"no_restart\n")
             infile.write(f"finish\n")
 
@@ -92,14 +61,17 @@ class NewKMCJob:
         """Writes the mechanism_input.dat file"""
         self.write_header(file_name="mechanism_input.dat")
         with open(f"{self.path}/mechanism_input.dat", 'a') as infile:
-            infile.write('\nmechanism\n\n')
+            infile.write('mechanism\n\n')
             infile.write('############################################################################s\n\n')
             for step in self.df_mechanism.index:
                 infile.write(f"reversible_step {step}\n\n")
                 step_type = self.df_mechanism.loc[step, 'type']
                 if 'adsorption' in step_type:
                     infile.write(f"  gas_reacs_prods {self.df_mechanism.loc[step, 'gas_reacs_prods']}\n")
-                sites = self.df_mechanism.loc[step, 'sites']
+                try:
+                    sites = int(self.df_mechanism.loc[step, 'sites'])
+                except TypeError:
+                    print(f"step {step}")
                 infile.write(f"  sites {sites}\n")
                 if sites > 1:
                     infile.write(f"  neighboring {self.df_mechanism.loc[step, 'neighboring']}\n")
@@ -123,7 +95,7 @@ class NewKMCJob:
         """Writes the energetics_input.dat file"""
         self.write_header(file_name="energetics_input.dat")
         with open(f"{self.path}/energetics_input.dat", 'a') as infile:
-            infile.write('\nenergetics\n\n')
+            infile.write('energetics\n\n')
             infile.write('############################################################################s\n\n')
             for cluster in self.df_energetics.index:
                 infile.write(f"cluster {cluster}\n\n")
@@ -151,7 +123,7 @@ class NewKMCJob:
             infile.write('# https://github.com/hprats/ZacrosIOTools.git                              #\n')
             infile.write('#                                                                          #\n')
             infile.write('# Hector Prats, PhD                                                        #\n')
-            infile.write('############################################################################\n')
+            infile.write('############################################################################\n\n')
 
     def get_pre_expon(self, step, T):
         """Calculates the forward pre-exponential and the pre-exponential ratio, required for the mechanism_input.dat
@@ -183,4 +155,3 @@ class NewKMCJob:
             sys.exit(f"Invalid step type: {step_type}")
         pe_ratio = pe_fwd / pe_rev
         return pe_fwd, pe_ratio
-
