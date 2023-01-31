@@ -19,12 +19,12 @@ class NewKMCJob:
         >>> from zacrosio.kmc_job import NewKMCJob
         >>> simulation_tags = {'pressure': 1.0, 'n_gas_species': 5}
         >>> my_job = NewKMCJob(
-        >>>    path='/home/test/my_job',
+        >>>    path='/home/my_job',
         >>>    simulation_tags=simulation_tags,
-        >>>    df_mechanism=pd.read_csv("/home/test/input_files/mechanism.csv", index_col=0),
-        >>>    df_energetics=pd.read_csv("/home/test/input_files/energetics.csv", index_col=0),
-        >>>    lattice_path='/home/test')
-        >>> my_job.create_job_dir(T=300)
+        >>>    df_mechanism=pd.read_csv("/home/input_files/mechanism.csv", index_col=0),
+        >>>    df_energetics=pd.read_csv("/home/input_files/energetics.csv", index_col=0),
+        >>>    lattice_path='/home/input_files/lattice_input.dat')
+        >>> my_job.create_job_dir(T=400)
         """
 
     def __init__(self, path, simulation_tags, df_mechanism, df_energetics, lattice_path):
