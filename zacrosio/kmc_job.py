@@ -135,7 +135,7 @@ class NewKMCJob:
                                               T=T,
                                               vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                               vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
-                                              inertia_list=self.df_mechanism.loc[step, 'inertia_list'],
+                                              rot_temperatures=self.df_mechanism.loc[step, 'rot_temperatures'],
                                               sym_number=self.df_mechanism.loc[step, 'sym_number'])
         elif step_type == 'activated_adsorption':
             pe_fwd, pe_rev = calc_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
@@ -144,7 +144,7 @@ class NewKMCJob:
                                           vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                           vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
                                           vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
-                                          inertia_list=self.df_mechanism.loc[step, 'inertia_list'],
+                                          rot_temperatures=self.df_mechanism.loc[step, 'rot_temperatures'],
                                           sym_number=self.df_mechanism.loc[step, 'sym_number'])
         elif step_type == 'surface_reaction':
             pe_fwd, pe_rev = calc_surf_react(T=T,
