@@ -90,7 +90,7 @@ class NewKMCJob:
                 infile.write(f"  activ_eng {self.df_mechanism.loc[step, 'activ_eng']:.2f}\n")
                 for keyword in ['prox_factor', 'angles', 'no_mirror_images']:  # optional keywords
                     if not pd.isnull(self.df_mechanism.loc[step, keyword]):
-                        infile.write(f"  prox_factor {self.df_mechanism.loc[step, keyword]}\n")
+                        infile.write(f"  {keyword} {self.df_mechanism.loc[step, keyword]}\n")
                 infile.write(f"\nend_reversible_step\n\n")
                 infile.write('############################################################################s\n\n')
                 infile.write(f"end_mechanism\n")
@@ -114,7 +114,7 @@ class NewKMCJob:
                 infile.write(f"\n  site_types {self.df_energetics.loc[cluster, 'site_types']}\n")
                 for keyword in ['graph_multiplicity', 'angles', 'no_mirror_images']:  # optional keywords
                     if not pd.isnull(self.df_energetics.loc[cluster, keyword]):
-                        infile.write(f"  prox_factor {self.df_energetics.loc[cluster, keyword]}\n")
+                        infile.write(f"  {keyword} {self.df_energetics.loc[cluster, keyword]}\n")
                 infile.write(f"\n  cluster_eng {self.df_energetics.loc[cluster, 'cluster_eng']:.2f}\n\n")
                 infile.write(f"end_cluster\n\n")
                 infile.write('############################################################################s\n\n')
