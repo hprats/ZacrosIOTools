@@ -1,4 +1,5 @@
 import os
+import pandas as pd
 from random import randint
 from zacrosio.functions import *
 
@@ -107,6 +108,11 @@ class NewKMCJob:
                 lattice_state_list = ast.literal_eval(self.df_energetics.loc[cluster, 'lattice_state'])
                 for element in lattice_state_list:
                     infile.write(f"    {element}\n")
+                infile.write(f"\n  site_types {self.df_energetics.loc[cluster, 'site_types']}\n")
+                if not pd.isnull(self.df_energetics.loc[cluster, 'graph_multiplicity']):
+                    infile.write(f"  graph_multiplicity {self.df_energetics.loc[cluster, 'graph_multiplicity']}\n")
+                if not pd.isnull(self.df_energetics.loc[cluster, 'angles']):
+                    infile.write(f"  angles {self.df_energetics.loc[cluster, 'angles']}\n")
                 infile.write(f"\n  cluster_eng {self.df_energetics.loc[cluster, 'cluster_eng']:.2f}\n\n")
                 infile.write(f"end_cluster\n\n")
                 infile.write('############################################################################s\n\n')
@@ -153,5 +159,8 @@ class NewKMCJob:
                                              vib_list_final=self.df_mechanism.loc[step, 'vib_list_final'])
         else:
             sys.exit(f"Invalid step type: {step_type}")
+        if not pd.isnull(self.df_energetics.loc[step, 'scaling_factor']):
+            pe_fwd = pe_fwd * self.df_energetics.loc[step, 'scaling_factor']
+            pe_rev = pe_rev * self.df_energetics.loc[step, 'scaling_factor']
         pe_ratio = pe_fwd / pe_rev
         return pe_fwd, pe_ratio
