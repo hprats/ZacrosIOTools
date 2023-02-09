@@ -4,6 +4,7 @@ from math import sqrt, exp
 from scipy.constants import pi, N_A, k, h, physical_constants
 
 k_eV = physical_constants["Boltzmann constant in eV/K"][0]
+atomic_mass = physical_constants["atomic mass constant"][0]
 
 
 def get_q_vib(T, vib_list, include_zpe=False):
@@ -24,53 +25,58 @@ def get_q_vib(T, vib_list, include_zpe=False):
     return q_vib
 
 
-def get_q_rot(T, rot_temperatures, sym_number):
+def get_q_rot(T, inertia_list, sym_number):
     """Calculates the rotational partition function.
 
     Arguments: T (float): The temperature in K
-    rot_temperatures (str): List of rotational temperatures (1 for linear,
-    3 for non-linear). They can be calculated from the inertia moments as rot_t = h**2 / (8 * pi**2 * i * k).
+    inertia_moments (str): List of inertia moments (1 for linear, 3 for non-linear) in amu*Å2
     sym_number (int): Symmetry number of the molecule
     """
-    rot_temperatures = ast.literal_eval(rot_temperatures)
-    if len(rot_temperatures) == 1:  # linear
-        rot_t = rot_temperatures[0]
-        q_rot_gas = T / (sym_number * rot_t)
-    elif len(rot_temperatures) == 3:  # non-linear
-        rot_t_a, rot_t_b, rot_t_c = rot_temperatures[0], rot_temperatures[1], rot_temperatures[2]
-        q_rot_gas = (sqrt(pi) / sym_number) * sqrt(T**3 / (rot_t_a * rot_t_b * rot_t_c))
+    inertia_list = ast.literal_eval(inertia_list)
+    if len(inertia_list) == 1:  # linear
+        i = inertia_list[0] * atomic_mass / 1.0e20  # from amu*Å2 to kg*m2
+        q_rot_gas = 8 * pi**2 * i * k * T / (sym_number * h**2)
+    elif len(inertia_list) == 3:  # non-linear
+        i_a = inertia_list[0] * atomic_mass / 1.0e20
+        i_b = inertia_list[1] * atomic_mass / 1.0e20
+        i_c = inertia_list[2] * atomic_mass / 1.0e20
+        q_rot_gas = (sqrt(pi * i_a * i_b * i_c) / sym_number) * (8 * pi**2 * k * T / h**2)**(3/2)
     else:
         sys.exit(f"Invalid inertia_list")
     return q_rot_gas
 
 
-def calc_non_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, rot_temperatures, sym_number):
+def calc_non_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, inertia_list, sym_number, degeneracy):
     """Calculates the forward and reverse pre-exponential factors for a reversible non-activated adsorption."""
-    m = molec_mass / 1000 / N_A
+    A_site = A_site * 1.0e-10  # Å^2 to m^2
+    m = molec_mass * 1.0e-3 / N_A  # g/mol to kg/molec
     q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
     q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
-    q_rot_gas = get_q_rot(T=T, rot_temperatures=rot_temperatures, sym_number=sym_number)
+    q_rot_gas = get_q_rot(T=T, inertia_list=inertia_list, sym_number=sym_number)
     q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
+    q_elect_gas = degeneracy
     pe_fwd = A_site / sqrt(2 * pi * m * k * T)
-    pe_rev = (q_vib_gas * q_rot_gas * q_trans_2d_gas / q_vib_ads) * (k * T / h)
+    pe_rev = (q_elect_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas / q_vib_ads) * (k * T / h)
     return pe_fwd, pe_rev
 
 
-def calc_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, vib_list_ts, rot_temperatures, sym_number):
+def calc_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, vib_list_ts, inertia_list, sym_number, degeneracy):
     """Calculates the forward and reverse pre-exponential factors for a reversible activated adsorption."""
-    m = molec_mass / 1000 / N_A
+    A_site = A_site * 1.0e-10  # Å^2 to m^2
+    m = molec_mass / 1000 / N_A  # g/mol to kg/molec
     q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
     q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
     q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
-    q_rot_gas = get_q_rot(T=T, rot_temperatures=rot_temperatures, sym_number=sym_number)
+    q_rot_gas = get_q_rot(T=T, inertia_list=inertia_list, sym_number=sym_number)
     q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
-    pe_fwd = (q_vib_ts / (q_vib_gas * q_rot_gas * q_trans_2d_gas)) * (A_site / sqrt(2 * pi * m * k * T))
+    q_elect_gas = degeneracy
+    pe_fwd = (q_vib_ts / (q_elect_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas)) * (A_site / sqrt(2 * pi * m * k * T))
     pe_rev = (q_vib_ts / q_vib_ads) * (k * T / h)
     return pe_fwd, pe_rev
 
 
-def calc_surf_react(T, vib_list_initial, vib_list_ts, vib_list_final):
-    """Calculates the forward and reverse pre-exponential factors for a reversible surface reaction."""
+def calc_surf_proc(T, vib_list_initial, vib_list_ts, vib_list_final):
+    """Calculates the forward and reverse pre-exponential factors for a reversible surface process."""
     q_vib_initial = get_q_vib(T=T, vib_list=vib_list_initial)
     q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
     q_vib_final = get_q_vib(T=T, vib_list=vib_list_final)

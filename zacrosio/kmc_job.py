@@ -140,8 +140,9 @@ class NewKMCJob:
                                               T=T,
                                               vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                               vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
-                                              rot_temperatures=self.df_mechanism.loc[step, 'rot_temperatures'],
-                                              sym_number=self.df_mechanism.loc[step, 'sym_number'])
+                                              inertia_list=self.df_mechanism.loc[step, 'inertia_list'],
+                                              sym_number=self.df_mechanism.loc[step, 'sym_number'],
+                                              degeneracy=self.df_mechanism.loc[step, 'degeneracy'])
         elif step_type == 'activated_adsorption':
             pe_fwd, pe_rev = calc_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
                                           molec_mass=self.df_mechanism.loc[step, 'molec_mass'],
@@ -149,13 +150,14 @@ class NewKMCJob:
                                           vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                           vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
                                           vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
-                                          rot_temperatures=self.df_mechanism.loc[step, 'rot_temperatures'],
-                                          sym_number=self.df_mechanism.loc[step, 'sym_number'])
-        elif step_type == 'surface_reaction':
-            pe_fwd, pe_rev = calc_surf_react(T=T,
-                                             vib_list_initial=self.df_mechanism.loc[step, 'vib_list_initial'],
-                                             vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
-                                             vib_list_final=self.df_mechanism.loc[step, 'vib_list_final'])
+                                          inertia_list=self.df_mechanism.loc[step, 'inertia_list'],
+                                          sym_number=self.df_mechanism.loc[step, 'sym_number'],
+                                          degeneracy=self.df_mechanism.loc[step, 'degeneracy'])
+        elif step_type == 'surface_process':
+            pe_fwd, pe_rev = calc_surf_proc(T=T,
+                                            vib_list_initial=self.df_mechanism.loc[step, 'vib_list_initial'],
+                                            vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
+                                            vib_list_final=self.df_mechanism.loc[step, 'vib_list_final'])
         else:
             sys.exit(f"Invalid step type: {step_type}")
         if not pd.isnull(self.df_energetics.loc[step, 'scaling_factor']):
