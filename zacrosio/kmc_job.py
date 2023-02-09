@@ -86,9 +86,12 @@ class NewKMCJob:
                     infile.write(f"    {element}\n")
                 pre_expon, pe_ratio = self.get_pre_expon(step=step, T=T)
                 infile.write(f"\n  pre_expon {pre_expon:.3e}\n")
+                infile.write(f"  pe_ratio {pe_ratio:.3e}\n")
                 infile.write(f"  activ_eng {self.df_mechanism.loc[step, 'activ_eng']:.2f}\n")
-                infile.write(f"  pe_ratio {pe_ratio:.3e}\n\n")
-                infile.write(f"end_reversible_step\n\n")
+                for keyword in ['prox_factor', 'angles', 'no_mirror_images']:  # optional keywords
+                    if not pd.isnull(self.df_mechanism.loc[step, keyword]):
+                        infile.write(f"  prox_factor {self.df_mechanism.loc[step, keyword]}\n")
+                infile.write(f"\nend_reversible_step\n\n")
                 infile.write('############################################################################s\n\n')
                 infile.write(f"end_mechanism\n")
 
@@ -109,10 +112,9 @@ class NewKMCJob:
                 for element in lattice_state_list:
                     infile.write(f"    {element}\n")
                 infile.write(f"\n  site_types {self.df_energetics.loc[cluster, 'site_types']}\n")
-                if not pd.isnull(self.df_energetics.loc[cluster, 'graph_multiplicity']):
-                    infile.write(f"  graph_multiplicity {self.df_energetics.loc[cluster, 'graph_multiplicity']}\n")
-                if not pd.isnull(self.df_energetics.loc[cluster, 'angles']):
-                    infile.write(f"  angles {self.df_energetics.loc[cluster, 'angles']}\n")
+                for keyword in ['graph_multiplicity', 'angles', 'no_mirror_images']:  # optional keywords
+                    if not pd.isnull(self.df_energetics.loc[cluster, keyword]):
+                        infile.write(f"  prox_factor {self.df_energetics.loc[cluster, keyword]}\n")
                 infile.write(f"\n  cluster_eng {self.df_energetics.loc[cluster, 'cluster_eng']:.2f}\n\n")
                 infile.write(f"end_cluster\n\n")
                 infile.write('############################################################################s\n\n')
