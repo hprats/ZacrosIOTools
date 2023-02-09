@@ -69,12 +69,8 @@ class NewKMCJob:
                 step_type = self.df_mechanism.loc[step, 'type']
                 if 'adsorption' in step_type:
                     infile.write(f"  gas_reacs_prods {self.df_mechanism.loc[step, 'gas_reacs_prods']}\n")
-                try:
-                    sites = int(self.df_mechanism.loc[step, 'sites'])
-                except TypeError:
-                    print(f"step {step}")
-                infile.write(f"  sites {sites}\n")
-                if sites > 1:
+                infile.write(f"  sites {self.df_mechanism.loc[step, 'sites']}\n")
+                if not pd.isnull(self.df_mechanism.loc[step, 'neighboring']):
                     infile.write(f"  neighboring {self.df_mechanism.loc[step, 'neighboring']}\n")
                 infile.write(f"  initial\n")
                 initial_state_list = ast.literal_eval(self.df_mechanism.loc[step, 'initial'])
@@ -84,6 +80,7 @@ class NewKMCJob:
                 final_state_list = ast.literal_eval(self.df_mechanism.loc[step, 'final'])
                 for element in final_state_list:
                     infile.write(f"    {element}\n")
+                infile.write(f"  site_types {self.df_mechanism.loc[step, 'site_types']}\n")
                 pre_expon, pe_ratio = self.get_pre_expon(step=step, T=T)
                 infile.write(f"\n  pre_expon {pre_expon:.3e}\n")
                 infile.write(f"  pe_ratio {pe_ratio:.3e}\n")
