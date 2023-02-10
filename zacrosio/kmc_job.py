@@ -56,14 +56,14 @@ class NewKMCJob:
         self.write_header(file_name="simulation_input.dat")
         with open(f"{self.path}/simulation_input.dat", 'a') as infile:
             infile.write('random_seed\t'.expandtabs(26) + str(randint(100000, 999999)) + '\n')
-            infile.write('temperature\t'.expandtabs(26) + str(T) + '\n')
-            infile.write('pressure\t'.expandtabs(26) + str(p) + '\n')
+            infile.write('temperature\t'.expandtabs(26) + str(float(T)) + '\n')
+            infile.write('pressure\t'.expandtabs(26) + str(float(p)) + '\n')
             infile.write('n_gas_species\t'.expandtabs(26) + str(len(gas_specs_names)) + '\n')
             infile.write('gas_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in gas_specs_names) + '\n')
-            for tag in ['gas_energies', 'gas_molar_fracs', 'gas_molar_weights']:
+            for tag in ['gas_energies', 'gas_molar_fracs', 'gas_molec_weights']:
                 tag_list = [self.df_energetics.loc[f"{molecule}_gas", tag] for molecule in gas_specs_names]
                 infile.write(f'{tag}\t'.expandtabs(26) + " ".join(str(x) for x in tag_list) + '\n')
-            infile.write('n_surf_species\t'.expandtabs(26) + str(len(gas_specs_names)) + '\n')
+            infile.write('n_surf_species\t'.expandtabs(26) + str(len(surf_specs_names)) + '\n')
             infile.write('surf_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_names) + '\n')
             infile.write('surf_specs_dent\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_dent) + '\n')
             for tag in self.simulation_tags:
@@ -130,7 +130,7 @@ class NewKMCJob:
                 infile.write(f"  cluster_eng {self.df_energetics.loc[cluster, 'cluster_eng']:.2f}\n\n")
                 infile.write(f"end_cluster\n\n")
                 infile.write('############################################################################s\n\n')
-                infile.write(f"end_energetics\n")
+            infile.write(f"end_energetics\n")
 
     def write_lattice(self):
         """Writes the lattice_input.dat file"""
