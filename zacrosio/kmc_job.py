@@ -104,7 +104,7 @@ class NewKMCJob:
                 # todo: add possibility of including no_mirror_images (maybe column with additional flags)
                 infile.write(f"\nend_reversible_step\n\n")
                 infile.write('############################################################################s\n\n')
-                infile.write(f"end_mechanism\n")
+            infile.write(f"end_mechanism\n")
 
     def write_energetics(self):
         """Writes the energetics_input.dat file"""
