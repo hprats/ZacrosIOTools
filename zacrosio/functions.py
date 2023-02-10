@@ -19,9 +19,9 @@ def get_q_vib(T, vib_list, include_zpe=False):
     vib_list = ast.literal_eval(vib_list)
     for v in vib_list:
         if include_zpe:
-            q_vib = q_vib * exp(v / (1000 * 2 * k_eV * T)) / (1 - exp(v / (1000 * k_eV * T)))
+            q_vib = q_vib * exp(v / (1000 * 2 * k_eV * T)) / (1 - exp(- v / (1000 * k_eV * T)))
         else:
-            q_vib = q_vib * 1 / (1 - exp(v / (1000 * k_eV * T)))
+            q_vib = q_vib * 1 / (1 - exp(- v / (1000 * k_eV * T)))
     return q_vib
 
 
@@ -48,7 +48,7 @@ def get_q_rot(T, inertia_list, sym_number):
 
 def calc_non_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, inertia_list, sym_number, degeneracy):
     """Calculates the forward and reverse pre-exponential factors for a reversible non-activated adsorption."""
-    A_site = A_site * 1.0e-10  # Å^2 to m^2
+    A_site = A_site * 1.0e-20  # Å^2 to m^2
     m = molec_mass * 1.0e-3 / N_A  # g/mol to kg/molec
     q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
     q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
@@ -62,7 +62,7 @@ def calc_non_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, inertia_
 
 def calc_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, vib_list_ts, inertia_list, sym_number, degeneracy):
     """Calculates the forward and reverse pre-exponential factors for a reversible activated adsorption."""
-    A_site = A_site * 1.0e-10  # Å^2 to m^2
+    A_site = A_site * 1.0e-20  # Å^2 to m^2
     m = molec_mass / 1000 / N_A  # g/mol to kg/molec
     q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
     q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
