@@ -57,12 +57,12 @@ This file contains information about the species involved, the operating conditi
 
 #### 2. lattice_input.dat
 
-Currently, the generation of the lattice_input.dat file by ZacrosIOTools is not implemented. This file has to be generated manually and provide its path, so that ZacrosIOTools can copy this file to the new job directory. 
+This file defines the lattice model. Currently, the generation of the lattice_input.dat file by ZacrosIOTools is not implemented. This file has to be generated manually and provide its path, so that ZacrosIOTools can copy this file to the new job directory. 
 
-#### 3. simulation_input.dat
+#### 3. energetics_input.dat
 
-This file contains information about the species involved, the operating conditions, as well as parameters that specify the behavior of the program, namely when to take samples, what are the stopping criteria. Here, only the keyords related to the frequency of sampling and stopping criteria are required, and should be passed to ZacroIOTools as a dictionary (e.g. see example above).
+This file defines the cluster expansion Hamiltonian to be used for calculating the energy of a given lattice configuration. This information must be given in the form of a Pandas dataframe, where each row of corresponds to a cluster. (Todo ...)
 
-#### 4. simulation_input.dat
+#### 4. mechanism_input.dat
 
-This file contains information about the species involved, the operating conditions, as well as parameters that specify the behavior of the program, namely when to take samples, what are the stopping criteria. Here, only the keyords related to the frequency of sampling and stopping criteria are required, and should be passed to ZacroIOTools as a dictionary (e.g. see example above).
+This file defines the reaction mechanism. This information must be given in the form of a Pandas dataframe, where each row of corresponds to an elementary step (e.g. adsorption, desorption, diffusion or surface reaction). (Todo ...)
