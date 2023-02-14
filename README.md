@@ -72,9 +72,9 @@ The entries corresponding to point clusters and pairwise lateral interactions mu
 - cluster_eng (float, in eV), e.g. -0.42
 
 Optional columns:
-- neighboring (str), e.g. 1-2
-- graph_multiplicity (int), e.g. 2
-- angles (str), e.g. 1-2-3:180
+- neighboring (str), e.g. 1-2  # default is None
+- graph_multiplicity (int), e.g. 2  # default is 1
+- angles (str), e.g. 1-2-3:180  # default is None
 
 #### 4. mechanism_input.dat
 
@@ -104,7 +104,7 @@ Additional required columns for 'surface_process' steps:
 - vib_list_final (list of floats, in meV), e.g. [332.7, 196.2, 70.5, 53.9, 37.7, 10.0]
 
 Optional columns:
-- neighboring (str), e.g. 1-2
-- angles (str), e.g. 1-2-3:180
-- scaling fator (float), e.g. 0.001
-- prox_factor (str), e.g. 0.3 # default is 0.5
+- neighboring (str), e.g. 1-2  # default is None
+- angles (str), e.g. 1-2-3:180  # default is None
+- scaling fator (float), e.g. 0.001  # default is 1
+- prox_factor (str), e.g. 0.3  # default is 0.5
