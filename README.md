@@ -70,6 +70,7 @@ The entries corresponding to point clusters and pairwise lateral interactions mu
 - site_types (string), e.g. tM tC
 - lattice_state (list of one element), e.g. ['1 CH3** 1', '1 CH3** 2']
 - cluster_eng (float, in eV), e.g. -0.42
+
 Optional columns:
 - neighboring (string), e.g. 1-2
 - graph_multiplicity (int), e.g. 2
