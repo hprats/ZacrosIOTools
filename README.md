@@ -27,10 +27,6 @@ With ZacrosIOTools, the input files for a ZACROS job can be prepared as follows:
 
     from zacrosio.kmc_job import NewKMCJob
 
-    df_mechanism = pd.read_csv("mechanism_data.csv", index_col=0)
-    df_energetics = pd.read_csv("energetics_data.csv", index_col=0)
-    lattice_path = "./lattice_input.dat"
-
     simulation_tags = {'snapshots': 'on time 5.e-1',
                        'process_statistics': 'on time 1.e-2',
                        'species_numbers': 'on time 5.e-3',
@@ -41,9 +37,9 @@ With ZacrosIOTools, the input files for a ZACROS job can be prepared as follows:
 
     job = NewKMCJob(path="./new_job",
                     simulation_tags=simulation_tags,
-                    df_mechanism=df_mechanism,
-                    df_energetics=df_energetics,
-                    lattice_path=lattice_path)
+                    df_mechanism=pd.read_csv("mechanism_data.csv", index_col=0),
+                    df_energetics=pd.read_csv("energetics_data.csv", index_col=0),
+                    lattice_path="./lattice_input.dat")
 
     job.create_job_dir(T=1000, p=2)
 
