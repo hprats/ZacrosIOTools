@@ -92,7 +92,7 @@ Additional required columns for 'non_activated_adsorption' and 'activated_adsorp
 - A_site (float), e.g. 4.28
 - vib_list_ads (list of floats, in meV), e.g. [249.1, 82.8, 63.8, 63.8, 8.9, 8.3]
 - vib_list_gas (list of floats, in meV), e.g. [249.2]
-- inertia_list (list of floats, in amu*Å2), 1/3 elements for linear/non-linear molecules, e.g. [8.9]. # can be obtained from ase.Atoms.get_moments_of_inertia()
+- inertia_list (list of floats, in amu*Å2, 1 or 3 elements for linear or non-linear molecules, respectively), e.g. [8.9]. # can be obtained from ase.Atoms.get_moments_of_inertia()
 - sym_number (int), e.g. 1
 - degeneracy (int), e.g. 1
 
