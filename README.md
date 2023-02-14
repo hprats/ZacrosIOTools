@@ -61,11 +61,19 @@ This file defines the lattice model. Currently, the generation of the lattice_in
 
 This file defines the cluster expansion Hamiltonian to be used for calculating the energy of a given lattice configuration. This information must be given in the form of a Pandas dataframe, where each row of corresponds to a cluster. The clusters are classified as gas-phase molecules (X_gas), point clusters (X_point) or pairwise lateral interactions (X+Y_pair). 
 The entries corresponding to gas_phase molecules must end in '_gas' (e.g. CH4_gas) and the following columns are required:
-- gas_energy (float), e.g. 1.40
-- gas_molar_frac (float
+- gas_energy (float, in eV), e.g. 1.40
+- gas_molar_frac (float), e.g. 0.65
+- gas_molec_weight (float, in g/mol), e.g. 16.04
+
+The entries corresponding to point clusters and pairwise lateral interactions must end in '_point' and '_pair', respectively (e.g. CH3_point, CH2+H_pair) and the following columns are required:
 - sites (int), e.g. 2
 - site_types (string), e.g. tM tC
-- 
+- lattice_state (list of one element), e.g. ['1 CH3** 1', '1 CH3** 2']
+- cluster_eng (float, in eV), e.g. -0.42
+Optional columns:
+- neighboring (string), e.g. 1-2
+- graph_multiplicity (int), e.g. 2
+- angles (string), e.g. 1-2-3:180
 
 #### 4. mechanism_input.dat
 
