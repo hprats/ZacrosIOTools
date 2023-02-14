@@ -7,25 +7,30 @@ from zacrosio.functions import *
 class NewKMCJob:
     """A class that represents a new KMC job with ZACROS.
 
-        Attributes:
-            path (str): The path of the job including the job name. Will be used as the name of the folder.
-            simulation_tags (dict): A dictionary including all tags for the simulation_input.dat except random_seed and
-            temperature.  todo: update description
-            df_mechanism: A Pandas dataframe including the information for the mechanism_input.dat.
-            df_energetics: A Pandas dataframe including the information for the energetics_input.dat.
-            lattice_path (str): The path of the lattice_input.dat (already created).
+        Attributes: path (str): The path of the job including the job name. Will be used as the name of the folder.
+        simulation_tags (dict): A dictionary including keywords relatred to the frequency of sampling and stopping
+        criteria, for the simulation_input.dat.
+        df_mechanism: A Pandas dataframe including the information for the mechanism_input.dat.
+        df_energetics: A Pandas dataframe including the information for the energetics_input.dat. lattice_path (str):
+        The path of the lattice_input.dat (already created).
 
         Examples:
         >>> import pandas as pd
         >>> from zacrosio.kmc_job import NewKMCJob
-        >>> simulation_tags = {'pressure': 1.0, 'n_gas_species': 5}
+        >>> simulation_tags = {'snapshots': 'on time 5.e-1',
+                               'process_statistics': 'on time 1.e-2',
+                               'species_numbers': 'on time 5.e-3',
+                               'event_report': 'off',
+                               'max_steps': 1000000000,
+                               'max_time': 2.0,
+                               'wall_time': 86400}
         >>> my_job = NewKMCJob(
-        >>>    path='/home/my_job',
+        >>>    path='./new_job',
         >>>    simulation_tags=simulation_tags,
-        >>>    df_mechanism=pd.read_csv("/home/input_files/mechanism.csv", index_col=0),
-        >>>    df_energetics=pd.read_csv("/home/input_files/energetics.csv", index_col=0),
-        >>>    lattice_path='/home/input_files/lattice_input.dat')
-        >>> my_job.create_job_dir(T=400, p=2)
+        >>>    df_mechanism=pd.read_csv("mechanism_data.csv", index_col=0),
+        >>>    df_energetics=pd.read_csv("energetics_data.csv", index_col=0),
+        >>>    lattice_path="lattice_input.dat")
+        >>> my_job.create_job_dir(T=1000, p=2)
         """
 
     def __init__(self, path, simulation_tags, df_mechanism, df_energetics, lattice_path):
@@ -150,8 +155,10 @@ class NewKMCJob:
         file """
         step_type = self.df_mechanism.loc[step, 'type']
         if step_type == 'non_activated_adsorption':
+            gas_molecule = self.df_mechanism.loc[step, 'gas_reacs_prods'].split()[0]
+            molec_mass = self.df_energetics.loc[f"{gas_molecule}_gas", 'gas_molec_weight']
             pe_fwd, pe_rev = calc_non_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
-                                              molec_mass=self.df_mechanism.loc[step, 'molec_mass'],
+                                              molec_mass=molec_mass,
                                               T=T,
                                               vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                               vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
@@ -159,8 +166,10 @@ class NewKMCJob:
                                               sym_number=int(self.df_mechanism.loc[step, 'sym_number']),
                                               degeneracy=int(self.df_mechanism.loc[step, 'degeneracy']))
         elif step_type == 'activated_adsorption':
+            gas_molecule = self.df_mechanism.loc[step, 'gas_reacs_prods'].split()[0]
+            molec_mass = self.df_energetics.loc[f"{gas_molecule}_gas", 'gas_molec_weight']
             pe_fwd, pe_rev = calc_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
-                                          molec_mass=self.df_mechanism.loc[step, 'molec_mass'],
+                                          molec_mass=molec_mass,
                                           T=T,
                                           vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                           vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
