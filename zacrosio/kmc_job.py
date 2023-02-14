@@ -14,7 +14,7 @@ class NewKMCJob:
         df_energetics: A Pandas dataframe including the information for the energetics_input.dat. lattice_path (str):
         The path of the lattice_input.dat (already created).
 
-        Examples:
+        Example:
         >>> import pandas as pd
         >>> from zacrosio.kmc_job import NewKMCJob
         >>> simulation_tags = {'snapshots': 'on time 5.e-1',
