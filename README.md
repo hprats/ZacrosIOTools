@@ -67,15 +67,44 @@ The entries corresponding to gas_phase molecules must end in '_gas' (e.g. CH4_ga
 
 The entries corresponding to point clusters and pairwise lateral interactions must end in '_point' and '_pair', respectively (e.g. CH3_point, CH2+H_pair) and the following columns are required:
 - sites (int), e.g. 2
-- site_types (string), e.g. tM tC
-- lattice_state (list of one element), e.g. ['1 CH3** 1', '1 CH3** 2']
+- site_types (str), e.g. tM tC
+- lattice_state (list), e.g. ['1 CH3** 1', '1 CH3** 2']
 - cluster_eng (float, in eV), e.g. -0.42
 
 Optional columns:
-- neighboring (string), e.g. 1-2
+- neighboring (str), e.g. 1-2
 - graph_multiplicity (int), e.g. 2
-- angles (string), e.g. 1-2-3:180
+- angles (str), e.g. 1-2-3:180
 
 #### 4. mechanism_input.dat
 
-This file defines the reaction mechanism. This information must be given in the form of a Pandas dataframe, where each row of corresponds to an elementary step (e.g. adsorption, desorption, diffusion or surface reaction). (Todo ...)
+This file defines the reaction mechanism. This information must be given in the form of a Pandas dataframe, where each row of corresponds to a reversible elementary step (e.g. adsorption, desorption, diffusion or surface reaction). Irreversible steps can not be defined in the current implementation.
+The entries corresponding to elementary steps can be given any name (e.g. CO_dissociation) and the following columns are required:
+- type (str): choose between 'non_activated_adsorption', 'activated_adsorption' or 'surface_process'
+- sites (int), e.g. 2
+- site_types (str), e.g. tM tC
+- initial (list), e.g. ['1 * 1','2 CH3** 1','2 CH3** 2']
+- final (list), e.g. ['1 H_tC* 1','2 CH2** 1','2 CH2** 2']
+- activ_eng (float, in eV), e.g. 1.02
+
+Additional required columns for 'non_activated_adsorption' and 'activated_adsorption' steps:
+- gas_reacs_prods (str), e.g. CO -1
+- A_site (float), e.g. 4.28
+- vib_list_ads (list of floats, in meV), e.g. [249.1, 82.8, 63.8, 63.8, 8.9, 8.3]
+- vib_list_gas (list of floats, in meV), e.g. [249.2]
+- inertia_list (list of floats, in amu*Å2), 1/3 elements for linear/non-linear molecules, e.g. [8.9]
+- sym_number (int), e.g. 1
+- degeneracy (int), e.g. 1
+
+Additional required columns for 'activated_adsorption' and 'surface_process' steps:
+- vib_list_ts (list of floats, in meV), e.g. [332.7, 196.2, 70.5, 53.9, 37.7]
+
+Additional required columns for 'surface_process' steps:
+- vib_list_initial (list of floats, in meV), e.g. [332.7, 196.2, 70.5, 53.9, 37.7, 10.0]
+- vib_list_final (list of floats, in meV), e.g. [332.7, 196.2, 70.5, 53.9, 37.7, 10.0]
+
+Optional columns:
+- neighboring (str), e.g. 1-2
+- angles (str), e.g. 1-2-3:180
+- scaling fator (float), e.g. 0.001
+- prox_factor (str), e.g. 0.3 # default is 0.5
