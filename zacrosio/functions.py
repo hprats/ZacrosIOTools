@@ -7,21 +7,17 @@ k_eV = physical_constants["Boltzmann constant in eV/K"][0]
 atomic_mass = physical_constants["atomic mass constant"][0]
 
 
-def get_q_vib(T, vib_list, include_zpe=False):
+def get_q_vib(T, vib_list):
     """Calculates the vibrational partition function (including ZPE).
 
     Arguments:
         T (float): The temperature in K
         vib_list (str): List of all vibrational modes in meV
-        include_zpe (bool): Include ZPE contribution in the partition function
     """
     q_vib = 1.0
     vib_list = ast.literal_eval(vib_list)
     for v in vib_list:
-        if include_zpe:
-            q_vib = q_vib * exp(v / (1000 * 2 * k_eV * T)) / (1 - exp(- v / (1000 * k_eV * T)))
-        else:
-            q_vib = q_vib * 1 / (1 - exp(- v / (1000 * k_eV * T)))
+        q_vib = q_vib * exp(- v / (1000 * 2 * k_eV * T)) / (1 - exp(- v / (1000 * k_eV * T)))
     return q_vib
 
 

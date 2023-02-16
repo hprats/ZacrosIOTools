@@ -3,7 +3,7 @@ import pandas as pd
 from random import randint
 from zacrosio.functions import *
 
-
+# todo: remove ZPE from lateral interactions and include it in q_vib
 class NewKMCJob:
     """A class that represents a new KMC job with ZACROS.
 
@@ -65,9 +65,11 @@ class NewKMCJob:
             infile.write('pressure\t'.expandtabs(26) + str(float(p)) + '\n')
             infile.write('n_gas_species\t'.expandtabs(26) + str(len(gas_specs_names)) + '\n')
             infile.write('gas_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in gas_specs_names) + '\n')
-            for tag in ['gas_energy', 'gas_molar_frac', 'gas_molec_weight']:
-                tag_list = [self.df_energetics.loc[f"{molecule}_gas", tag] for molecule in gas_specs_names]
-                infile.write(f'{tag}\t'.expandtabs(26) + " ".join(str(x) for x in tag_list) + '\n')
+            tags_df = ['gas_energy', 'gas_molar_frac', 'gas_molec_weight']
+            tags_zacros = ['gas_energies', 'gas_molar_fracs', 'gas_molec_weights']
+            for tag1, tag2 in zip(tags_df, tags_zacros):
+                tag_list = [self.df_energetics.loc[f"{molecule}_gas", tag1] for molecule in gas_specs_names]
+                infile.write(f'{tag2}\t'.expandtabs(26) + " ".join(str(x) for x in tag_list) + '\n')
             infile.write('n_surf_species\t'.expandtabs(26) + str(len(surf_specs_names)) + '\n')
             infile.write('surf_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_names) + '\n')
             infile.write('surf_specs_dent\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_dent) + '\n')
@@ -131,7 +133,7 @@ class NewKMCJob:
                     infile.write(f"  graph_multiplicity {int(self.df_energetics.loc[cluster, 'graph_multiplicity'])}\n")
                 if not pd.isnull(self.df_energetics.loc[cluster, 'angles']):
                     infile.write(f"  angles {self.df_energetics.loc[cluster, 'angles']}\n")
-                # todo: add column optional keywords (e.g. no_mirror_images
+                # todo: add column optional keywords (e.g. no_mirror_images)
                 infile.write(f"  cluster_eng {self.df_energetics.loc[cluster, 'cluster_eng']:.2f}\n\n")
                 infile.write(f"end_cluster\n\n")
                 infile.write('############################################################################s\n\n')
