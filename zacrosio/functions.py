@@ -1,5 +1,7 @@
 import ast
 import sys
+import numpy as np
+import matplotlib.pyplot as plt
 from math import sqrt, exp
 from scipy.constants import pi, N_A, k, h, physical_constants
 
@@ -31,12 +33,12 @@ def get_q_rot(T, inertia_list, sym_number):
     inertia_list = ast.literal_eval(inertia_list)
     if len(inertia_list) == 1:  # linear
         i = inertia_list[0] * atomic_mass / 1.0e20  # from amu*Å2 to kg*m2
-        q_rot_gas = 8 * pi**2 * i * k * T / (sym_number * h**2)
+        q_rot_gas = 8 * pi ** 2 * i * k * T / (sym_number * h ** 2)
     elif len(inertia_list) == 3:  # non-linear
         i_a = inertia_list[0] * atomic_mass / 1.0e20
         i_b = inertia_list[1] * atomic_mass / 1.0e20
         i_c = inertia_list[2] * atomic_mass / 1.0e20
-        q_rot_gas = (sqrt(pi * i_a * i_b * i_c) / sym_number) * (8 * pi**2 * k * T / h**2)**(3/2)
+        q_rot_gas = (sqrt(pi * i_a * i_b * i_c) / sym_number) * (8 * pi ** 2 * k * T / h ** 2) ** (3 / 2)
     else:
         sys.exit(f"Invalid inertia_list")
     return q_rot_gas
@@ -79,3 +81,16 @@ def calc_surf_proc(T, vib_list_initial, vib_list_ts, vib_list_final):
     pe_fwd = (q_vib_ts / q_vib_initial) * (k * T / h)
     pe_rev = (q_vib_ts / q_vib_final) * (k * T / h)
     return pe_fwd, pe_rev
+
+
+def plot_coverage(path):
+    f = open(f"{path}/specnum_output.txt")
+    header = f.readline().split()
+    f.close()
+    data = np.loadtxt("{path}/specnum_output.txt", skiprows=1)
+    for i in range(5, len(header)):
+        plt.plot(xdata=data[:, 2], ydata=data[:, i], label=header[i])
+    plt.xlabel(header[2])
+    plt.ylabel("Number of species")
+    plt.legend()
+    plt.show()
