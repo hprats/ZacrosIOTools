@@ -3,7 +3,7 @@ import pandas as pd
 from random import randint
 from zacrosio.functions import *
 
-# todo: remove ZPE from lateral interactions and include it in q_vib
+
 class NewKMCJob:
     """A class that represents a new KMC job with ZACROS.
 
@@ -33,28 +33,29 @@ class NewKMCJob:
         >>> my_job.create_job_dir(T=1000, p=2)
         """
 
-    def __init__(self, path, simulation_tags, df_mechanism, df_energetics, lattice_path):
+    def __init__(self, path, simulation_tags, df_gas, df_mechanism, df_energetics, lattice_path):
         self.path = path
         self.name = path.split('/')[-1]
         self.simulation_tags = simulation_tags
+        self.df_gas = df_gas
         self.df_mechanism = df_mechanism
         self.df_energetics = df_energetics
         self.lattice_path = lattice_path
 
-    def create_job_dir(self, T=300, p=1):
+    def create_job_dir(self, T, p, dict_molar_fracs, dict_scaling):
         """Creates a new directory and writes there the ZACROS input files"""
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-            self.write_simulation(T=T, p=p)
-            self.write_mechanism(T=T)
+            self.write_simulation(T=T, p=p, dict_molar_fracs=dict_molar_fracs)
+            self.write_mechanism(T=T, dict_scaling=dict_scaling)
             self.write_energetics()
             self.write_lattice()
         else:
             print(f'{self.path} already exists (nothing done)')
 
-    def write_simulation(self, T=300, p=1):
+    def write_simulation(self, T, p, dict_molar_fracs):
         """Writes the simulation_input.dat file"""
-        gas_specs_names = [x.replace('_gas', '') for x in self.df_energetics.index if '_gas' in x]
+        gas_specs_names = [x for x in self.df_gas.index]
         surf_specs_names = [x.replace('_point', '') for x in self.df_energetics.index if '_point' in x]
         surf_specs_names = [x+'*'*int(self.df_energetics.loc[f'{x}_point', 'sites']) for x in surf_specs_names]
         surf_specs_dent = [x.count('*') for x in surf_specs_names]
@@ -65,11 +66,13 @@ class NewKMCJob:
             infile.write('pressure\t'.expandtabs(26) + str(float(p)) + '\n')
             infile.write('n_gas_species\t'.expandtabs(26) + str(len(gas_specs_names)) + '\n')
             infile.write('gas_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in gas_specs_names) + '\n')
-            tags_df = ['gas_energy', 'gas_molar_frac', 'gas_molec_weight']
-            tags_zacros = ['gas_energies', 'gas_molar_fracs', 'gas_molec_weights']
-            for tag1, tag2 in zip(tags_df, tags_zacros):
-                tag_list = [self.df_energetics.loc[f"{molecule}_gas", tag1] for molecule in gas_specs_names]
+            tags_dict = ['gas_energy', 'gas_molec_weight']
+            tags_zacros = ['gas_energies', 'gas_molec_weights']
+            for tag1, tag2 in zip(tags_dict, tags_zacros):
+                tag_list = [self.df_gas.loc[x, tag1] for x in gas_specs_names]
                 infile.write(f'{tag2}\t'.expandtabs(26) + " ".join(str(x) for x in tag_list) + '\n')
+            gas_molar_frac_list = [dict_molar_fracs[x] for x in gas_specs_names]
+            infile.write(f'gas_molar_fracs\t'.expandtabs(26) + " ".join(str(x) for x in gas_molar_frac_list) + '\n')
             infile.write('n_surf_species\t'.expandtabs(26) + str(len(surf_specs_names)) + '\n')
             infile.write('surf_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_names) + '\n')
             infile.write('surf_specs_dent\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_dent) + '\n')
@@ -78,7 +81,7 @@ class NewKMCJob:
             infile.write(f"no_restart\n")
             infile.write(f"finish\n")
 
-    def write_mechanism(self, T=300):
+    def write_mechanism(self, T, dict_scaling):
         """Writes the mechanism_input.dat file"""
         self.write_header(file_name="mechanism_input.dat")
         with open(f"{self.path}/mechanism_input.dat", 'a') as infile:
@@ -88,7 +91,7 @@ class NewKMCJob:
                 infile.write(f"reversible_step {step}\n\n")
                 step_type = self.df_mechanism.loc[step, 'type']
                 if 'adsorption' in step_type:
-                    infile.write(f"  gas_reacs_prods {self.df_mechanism.loc[step, 'gas_reacs_prods']}\n")
+                    infile.write(f"  gas_reacs_prods {self.df_mechanism.loc[step, 'molecule']} -1\n")
                 infile.write(f"  sites {int(self.df_mechanism.loc[step, 'sites'])}\n")
                 if not pd.isnull(self.df_mechanism.loc[step, 'neighboring']):
                     infile.write(f"  neighboring {self.df_mechanism.loc[step, 'neighboring']}\n")
@@ -101,7 +104,7 @@ class NewKMCJob:
                 for element in final_state_list:
                     infile.write(f"    {element}\n")
                 infile.write(f"  site_types {self.df_mechanism.loc[step, 'site_types']}\n")
-                pre_expon, pe_ratio = self.get_pre_expon(step=step, T=T)
+                pre_expon, pe_ratio = self.get_pre_expon(step=step, T=T, dict_scaling=dict_scaling)
                 infile.write(f"  pre_expon {pre_expon:.3e}\n")
                 infile.write(f"  pe_ratio {pe_ratio:.3e}\n")
                 infile.write(f"  activ_eng {self.df_mechanism.loc[step, 'activ_eng']:.2f}\n")
@@ -152,33 +155,33 @@ class NewKMCJob:
             infile.write('# Hector Prats, PhD                                                        #\n')
             infile.write('############################################################################\n\n')
 
-    def get_pre_expon(self, step, T):
+    def get_pre_expon(self, step, T, dict_scaling):
         """Calculates the forward pre-exponential and the pre-exponential ratio, required for the mechanism_input.dat
         file """
         step_type = self.df_mechanism.loc[step, 'type']
         if step_type == 'non_activated_adsorption':
-            gas_molecule = self.df_mechanism.loc[step, 'gas_reacs_prods'].split()[0]
-            molec_mass = self.df_energetics.loc[f"{gas_molecule}_gas", 'gas_molec_weight']
+            molecule = self.df_mechanism.loc[step, 'molecule']
+            molec_mass = self.df_gas.loc[molecule, 'gas_molec_weight']
             pe_fwd, pe_rev = calc_non_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
                                               molec_mass=molec_mass,
                                               T=T,
                                               vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                               vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
-                                              inertia_list=self.df_mechanism.loc[step, 'inertia_list'],
-                                              sym_number=int(self.df_mechanism.loc[step, 'sym_number']),
-                                              degeneracy=int(self.df_mechanism.loc[step, 'degeneracy']))
+                                              inertia_list=self.df_gas.loc[molecule, 'inertia_list'],
+                                              sym_number=int(self.df_gas.loc[molecule, 'sym_number']),
+                                              degeneracy=int(self.df_gas.loc[molecule, 'degeneracy']))
         elif step_type == 'activated_adsorption':
-            gas_molecule = self.df_mechanism.loc[step, 'gas_reacs_prods'].split()[0]
-            molec_mass = self.df_energetics.loc[f"{gas_molecule}_gas", 'gas_molec_weight']
+            molecule = self.df_mechanism.loc[step, 'molecule']
+            molec_mass = self.df_gas.loc[molecule, 'gas_molec_weight']
             pe_fwd, pe_rev = calc_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
                                           molec_mass=molec_mass,
                                           T=T,
                                           vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
                                           vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
                                           vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
-                                          inertia_list=self.df_mechanism.loc[step, 'inertia_list'],
-                                          sym_number=int(self.df_mechanism.loc[step, 'sym_number']),
-                                          degeneracy=int(self.df_mechanism.loc[step, 'degeneracy']))
+                                          inertia_list=self.df_gas.loc[molecule, 'inertia_list'],
+                                          sym_number=int(self.df_gas.loc[molecule, 'sym_number']),
+                                          degeneracy=int(self.df_gas.loc[molecule, 'degeneracy']))
         elif step_type == 'surface_process':
             pe_fwd, pe_rev = calc_surf_proc(T=T,
                                             vib_list_initial=self.df_mechanism.loc[step, 'vib_list_initial'],
@@ -186,8 +189,8 @@ class NewKMCJob:
                                             vib_list_final=self.df_mechanism.loc[step, 'vib_list_final'])
         else:
             sys.exit(f"Invalid step type: {step_type}")
-        if not pd.isnull(self.df_mechanism.loc[step, 'scaling_factor']):
-            pe_fwd = pe_fwd * self.df_mechanism.loc[step, 'scaling_factor']
-            pe_rev = pe_rev * self.df_mechanism.loc[step, 'scaling_factor']
+        if step in dict_scaling:
+            pe_fwd = pe_fwd * dict_scaling[step]
+            pe_rev = pe_rev * dict_scaling[step]
         pe_ratio = pe_fwd / pe_rev
         return pe_fwd, pe_ratio
