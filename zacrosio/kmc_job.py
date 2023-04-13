@@ -33,17 +33,17 @@ class NewKMCJob:
         >>> my_job.create_job_dir(T=1000, p=2)
         """
 
-    def __init__(self, path, simulation_tags, df_gas, df_mechanism, df_energetics, lattice_path):
-        self.path = path
-        self.name = path.split('/')[-1]
+    def __init__(self, simulation_tags, df_gas, df_mechanism, df_energetics, lattice_path):
+        self.path = None
         self.simulation_tags = simulation_tags
         self.df_gas = df_gas
         self.df_mechanism = df_mechanism
         self.df_energetics = df_energetics
         self.lattice_path = lattice_path
 
-    def create_job_dir(self, T, p, dict_molar_fracs, dict_scaling):
+    def create_job_dir(self, path, T, p, dict_molar_fracs, dict_scaling):
         """Creates a new directory and writes there the ZACROS input files"""
+        self.path = path
         if not os.path.exists(self.path):
             os.mkdir(self.path)
             self.write_simulation(T=T, p=p, dict_molar_fracs=dict_molar_fracs)
