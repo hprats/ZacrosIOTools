@@ -94,6 +94,7 @@ Additional required columns for 'surface_process' steps:
 #### 4. df_energetics.csv
 
 This dataframe contains information about the clusters included in the cluster expansion, where each row of corresponds to a cluster. The entries corresponding to point clusters and pairwise lateral interactions must end in '_point' and '_pair', respectively (e.g. CH3_point, CH2+H_pair) and the following columns are required:
+- cluster_eng (float): cluster formation energy, e.g. -1.23
 - sites (int): number of sites involved, e.g. 2
 - site_types (str): type of adsorption sites, e.g. top top
 - neighboring (str): connectivity between sites involved, e.g. 1-2
