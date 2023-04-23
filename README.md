@@ -67,7 +67,6 @@ This dataframe contains information about the gas-phase species. Each row corres
 #### 3. df_mechanism.csv
 
 This dataframe contains information about the steps included in the reaction model, where each row of corresponds to a reversible elementary step. The following columns are required:
-- type (str): choose between 'non_activated_adsorption', 'activated_adsorption' or 'surface_process'
 - sites (int): number of sites involved, e.g. 2
 - site_types (str): type of adsorption sites, e.g. tM tC
 - neighboring (str): connectivity between sites involved, e.g. 1-2
@@ -76,20 +75,13 @@ This dataframe contains information about the steps included in the reaction mod
 - activ_eng (float): activation energy in eV, e.g. 1.02
 - prox_factor (float): proximity factor, e.g. 0.2    # default is 0.5
 - angles (str): angle between sites, e.g. 1-2-3:180  # default is None
+- vib_list_initial (list of floats): list of vibrational modes in meV for the initial state in meV, e.g. [332.7, 196.2, 70.5]
+- vib_list_ts (list of floats): list of vibrational modes in meV for the transition state in meV, e.g. [332.7, 196.2]. For non-activated adsorption, define this as an empty list i.e. []
+- vib_list_final (list of floats): list of vibrational modes in meV for the final state in meV, e.g. [332.7, 196.2, 70.5]
 
-Additional required columns for 'non_activated_adsorption' and 'activated_adsorption' steps:
+Additional required columns for adsorption steps:
 - molecule (str): gas-phase molecule involved, e.g. CO
 - A_site (float): area of the adsoption site in Å, e.g. 4.28
-- vib_list_gas (list of floats): list of vibrational modes in meV for the gas (initial) state in meV, e.g. [249.2]
-- vib_list_ads (list of floats): list of vibrational modes in meV for the adsorbed (final) state in meV, e.g. [249.1, 82.8, 63.8, 63.8, 8.9, 8.3]
-
-Additional required columns for 'activated_adsorption' and 'surface_process' steps:
-- vib_list_ts (list of floats): list of vibrational modes in meV for the transition state in meV, e.g. [332.7, 196.2, 70.5, 53.9, 37.7]
-
-Additional required columns for 'surface_process' steps:
-- vib_list_initial (list of floats): list of vibrational modes in meV for the initial state in meV, e.g. [332.7, 196.2, 70.5, 53.9, 37.7, 10.0]
-- vib_list_final (list of floats): list of vibrational modes in meV for the final state in meV, e.g. [332.7, 196.2, 70.5, 53.9, 37.7, 10.0]
-
 
 #### 4. df_energetics.csv
 
