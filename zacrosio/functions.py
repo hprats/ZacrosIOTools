@@ -44,40 +44,30 @@ def get_q_rot(T, inertia_list, sym_number):
     return q_rot_gas
 
 
-def calc_non_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, inertia_list, sym_number, degeneracy):
-    """Calculates the forward and reverse pre-exponential factors for a reversible non-activated adsorption."""
-    A_site = A_site * 1.0e-20  # Å^2 to m^2
-    m = molec_mass * 1.0e-3 / N_A  # g/mol to kg/molec
-    q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
-    q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
-    q_rot_gas = get_q_rot(T=T, inertia_list=inertia_list, sym_number=sym_number)
-    q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
-    q_elect_gas = degeneracy
-    pe_fwd = A_site / sqrt(2 * pi * m * k * T)
-    pe_rev = (q_elect_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas / q_vib_ads) * (k * T / h)
-    return pe_fwd, pe_rev
-
-
-def calc_act_ads(A_site, molec_mass, T, vib_list_ads, vib_list_gas, vib_list_ts, inertia_list, sym_number, degeneracy):
+def calc_ads(A_site, molec_mass, T, vib_list_is, vib_list_ts, vib_list_fs, inertia_list, sym_number, degeneracy):
     """Calculates the forward and reverse pre-exponential factors for a reversible activated adsorption."""
     A_site = A_site * 1.0e-20  # Å^2 to m^2
-    m = molec_mass / 1000 / N_A  # g/mol to kg/molec
-    q_vib_ads = get_q_vib(T=T, vib_list=vib_list_ads)
-    q_vib_gas = get_q_vib(T=T, vib_list=vib_list_gas)
-    q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
+    m = molec_mass * 1.0e-3 / N_A  # g/mol to kg/molec
+    q_vib_gas = get_q_vib(T=T, vib_list=vib_list_is)
     q_rot_gas = get_q_rot(T=T, inertia_list=inertia_list, sym_number=sym_number)
     q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
-    q_elect_gas = degeneracy
-    pe_fwd = (q_vib_ts / (q_elect_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas)) * (A_site / sqrt(2 * pi * m * k * T))
-    pe_rev = (q_vib_ts / q_vib_ads) * (k * T / h)
+    q_el_gas = degeneracy
+    q_vib_ads = get_q_vib(T=T, vib_list=vib_list_fs)
+    if not vib_list_ts:  # non-activated
+        pe_fwd = A_site / sqrt(2 * pi * m * k * T)
+        pe_rev = (q_el_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas / q_vib_ads) * (k * T / h)
+    else:  # activated
+        q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
+        pe_fwd = (q_vib_ts / (q_el_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas)) * (A_site / sqrt(2 * pi * m * k * T))
+        pe_rev = (q_vib_ts / q_vib_ads) * (k * T / h)
     return pe_fwd, pe_rev
 
 
-def calc_surf_proc(T, vib_list_initial, vib_list_ts, vib_list_final):
+def calc_surf_proc(T, vib_list_is, vib_list_ts, vib_list_fs):
     """Calculates the forward and reverse pre-exponential factors for a reversible surface process."""
-    q_vib_initial = get_q_vib(T=T, vib_list=vib_list_initial)
+    q_vib_initial = get_q_vib(T=T, vib_list=vib_list_is)
     q_vib_ts = get_q_vib(T=T, vib_list=vib_list_ts)
-    q_vib_final = get_q_vib(T=T, vib_list=vib_list_final)
+    q_vib_final = get_q_vib(T=T, vib_list=vib_list_fs)
     pe_fwd = (q_vib_ts / q_vib_initial) * (k * T / h)
     pe_rev = (q_vib_ts / q_vib_final) * (k * T / h)
     return pe_fwd, pe_rev

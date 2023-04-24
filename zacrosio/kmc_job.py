@@ -57,7 +57,7 @@ class NewKMCJob:
         """Writes the simulation_input.dat file"""
         gas_specs_names = [x for x in self.df_gas.index]
         surf_specs_names = [x.replace('_point', '') for x in self.df_energetics.index if '_point' in x]
-        surf_specs_names = [x+'*'*int(self.df_energetics.loc[f'{x}_point', 'sites']) for x in surf_specs_names]
+        surf_specs_names = [x + '*' * int(self.df_energetics.loc[f'{x}_point', 'sites']) for x in surf_specs_names]
         surf_specs_dent = [x.count('*') for x in surf_specs_names]
         self.write_header(file_name="simulation_input.dat")
         with open(f"{self.path}/simulation_input.dat", 'a') as infile:
@@ -89,8 +89,7 @@ class NewKMCJob:
             infile.write('############################################################################s\n\n')
             for step in self.df_mechanism.index:
                 infile.write(f"reversible_step {step}\n\n")
-                step_type = self.df_mechanism.loc[step, 'type']
-                if 'adsorption' in step_type:
+                if not pd.isna(self.df_mechanism.loc[step, 'molecule']):
                     infile.write(f"  gas_reacs_prods {self.df_mechanism.loc[step, 'molecule']} -1\n")
                 infile.write(f"  sites {int(self.df_mechanism.loc[step, 'sites'])}\n")
                 if not pd.isnull(self.df_mechanism.loc[step, 'neighboring']):
@@ -158,37 +157,24 @@ class NewKMCJob:
     def get_pre_expon(self, step, T, dict_scaling):
         """Calculates the forward pre-exponential and the pre-exponential ratio, required for the mechanism_input.dat
         file """
-        step_type = self.df_mechanism.loc[step, 'type']
-        if step_type == 'non_activated_adsorption':
+        if not pd.isna(self.df_mechanism.loc[step, 'molecule']):  # adsorption
             molecule = self.df_mechanism.loc[step, 'molecule']
             molec_mass = self.df_gas.loc[molecule, 'gas_molec_weight']
-            pe_fwd, pe_rev = calc_non_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
-                                              molec_mass=molec_mass,
-                                              T=T,
-                                              vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
-                                              vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
-                                              inertia_list=self.df_gas.loc[molecule, 'inertia_list'],
-                                              sym_number=int(self.df_gas.loc[molecule, 'sym_number']),
-                                              degeneracy=int(self.df_gas.loc[molecule, 'degeneracy']))
-        elif step_type == 'activated_adsorption':
-            molecule = self.df_mechanism.loc[step, 'molecule']
-            molec_mass = self.df_gas.loc[molecule, 'gas_molec_weight']
-            pe_fwd, pe_rev = calc_act_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
-                                          molec_mass=molec_mass,
-                                          T=T,
-                                          vib_list_ads=self.df_mechanism.loc[step, 'vib_list_ads'],
-                                          vib_list_gas=self.df_mechanism.loc[step, 'vib_list_gas'],
-                                          vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
-                                          inertia_list=self.df_gas.loc[molecule, 'inertia_list'],
-                                          sym_number=int(self.df_gas.loc[molecule, 'sym_number']),
-                                          degeneracy=int(self.df_gas.loc[molecule, 'degeneracy']))
-        elif step_type == 'surface_process':
+            pe_fwd, pe_rev = calc_ads(A_site=self.df_mechanism.loc[step, 'A_site'],
+                                      molec_mass=molec_mass,
+                                      T=T,
+                                      vib_list_is=self.df_mechanism.loc[step, 'vib_list_is'],
+                                      vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
+                                      vib_list_fs=self.df_mechanism.loc[step, 'vib_list_fs'],
+                                      inertia_list=self.df_gas.loc[molecule, 'inertia_list'],
+                                      sym_number=int(self.df_gas.loc[molecule, 'sym_number']),
+                                      degeneracy=int(self.df_gas.loc[molecule, 'degeneracy']))
+        else:  # surface process
             pe_fwd, pe_rev = calc_surf_proc(T=T,
-                                            vib_list_initial=self.df_mechanism.loc[step, 'vib_list_initial'],
+                                            vib_list_is=self.df_mechanism.loc[step, 'vib_list_is'],
                                             vib_list_ts=self.df_mechanism.loc[step, 'vib_list_ts'],
-                                            vib_list_final=self.df_mechanism.loc[step, 'vib_list_final'])
-        else:
-            sys.exit(f"Invalid step type: {step_type}")
+                                            vib_list_fs=self.df_mechanism.loc[step, 'vib_list_fs'])
+
         if step in dict_scaling:
             pe_fwd = pe_fwd * dict_scaling[step]
             pe_rev = pe_rev * dict_scaling[step]
