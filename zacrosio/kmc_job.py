@@ -17,20 +17,22 @@ class NewKMCJob:
         Example:
         >>> import pandas as pd
         >>> from zacrosio.kmc_job import NewKMCJob
-        >>> simulation_tags = {'snapshots': 'on time 5.e-1',
-                               'process_statistics': 'on time 1.e-2',
-                               'species_numbers': 'on time 5.e-3',
-                               'event_report': 'off',
-                               'max_steps': 1000000000,
-                               'max_time': 2.0,
-                               'wall_time': 86400}
+        >>> simulation_tags = {'snapshots': 'on time 5.e-1', 'process_statistics': 'on time 1.e-2',
+                               'species_numbers': 'on time 5.e-3', 'event_report': 'off', 'max_steps': 1000000000,
+                               'max_time': 2.0, 'wall_time': 86400}
         >>> my_job = NewKMCJob(
-        >>>    path='./new_job',
-        >>>    simulation_tags=simulation_tags,
-        >>>    df_mechanism=pd.read_csv("mechanism_data.csv", index_col=0),
-        >>>    df_energetics=pd.read_csv("energetics_data.csv", index_col=0),
-        >>>    lattice_path="lattice_input.dat")
-        >>> my_job.create_job_dir(T=1000, p=2)
+        >>>     simulation_tags=simulation_tags,
+        >>>     df_gas=pd.read_csv("gas_data.csv", index_col=0),
+        >>>     df_mechanism=pd.read_csv("mechanism_data.csv", index_col=0),
+        >>>     df_energetics=pd.read_csv("energetics_data.csv", index_col=0),
+        >>>     lattice_path="lattice_input.dat")
+        >>>
+        >>> for temp in range(400, 1000, 100):
+        >>>     my_job.create_job_dir(
+        >>>         path=f'./co_oxidation_{temp}K',
+        >>>         T=temp,   # in K
+        >>>         dict_pressure={'CO': 1.2, 'O2': 0.01},  # in bar
+        >>>         dict_scaling={'O_diffusion': 1e-3})
         """
 
     def __init__(self, simulation_tags, df_gas, df_mechanism, df_energetics, lattice_path):
@@ -41,19 +43,19 @@ class NewKMCJob:
         self.df_energetics = df_energetics
         self.lattice_path = lattice_path
 
-    def create_job_dir(self, path, T, p, dict_molar_fracs, dict_scaling):
+    def create_job_dir(self, path, T, dict_pressure, dict_scaling):
         """Creates a new directory and writes there the ZACROS input files"""
         self.path = path
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-            self.write_simulation(T=T, p=p, dict_molar_fracs=dict_molar_fracs)
+            self.write_simulation(T=T, dict_pressure=dict_pressure)
             self.write_mechanism(T=T, dict_scaling=dict_scaling)
             self.write_energetics()
             self.write_lattice()
         else:
             print(f'{self.path} already exists (nothing done)')
 
-    def write_simulation(self, T, p, dict_molar_fracs):
+    def write_simulation(self, T, dict_pressure):
         """Writes the simulation_input.dat file"""
         gas_specs_names = [x for x in self.df_gas.index]
         surf_specs_names = [x.replace('_point', '') for x in self.df_energetics.index if '_point' in x]
@@ -63,7 +65,8 @@ class NewKMCJob:
         with open(f"{self.path}/simulation_input.dat", 'a') as infile:
             infile.write('random_seed\t'.expandtabs(26) + str(randint(100000, 999999)) + '\n')
             infile.write('temperature\t'.expandtabs(26) + str(float(T)) + '\n')
-            infile.write('pressure\t'.expandtabs(26) + str(float(p)) + '\n')
+            p_tot = sum(dict_pressure.values())
+            infile.write('pressure\t'.expandtabs(26) + str(p_tot) + '\n')
             infile.write('n_gas_species\t'.expandtabs(26) + str(len(gas_specs_names)) + '\n')
             infile.write('gas_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in gas_specs_names) + '\n')
             tags_dict = ['gas_energy', 'gas_molec_weight']
@@ -71,7 +74,7 @@ class NewKMCJob:
             for tag1, tag2 in zip(tags_dict, tags_zacros):
                 tag_list = [self.df_gas.loc[x, tag1] for x in gas_specs_names]
                 infile.write(f'{tag2}\t'.expandtabs(26) + " ".join(str(x) for x in tag_list) + '\n')
-            gas_molar_frac_list = [dict_molar_fracs[x] for x in gas_specs_names]
+            gas_molar_frac_list = [dict_pressure[x]/p_tot for x in gas_specs_names]
             infile.write(f'gas_molar_fracs\t'.expandtabs(26) + " ".join(str(x) for x in gas_molar_frac_list) + '\n')
             infile.write('n_surf_species\t'.expandtabs(26) + str(len(surf_specs_names)) + '\n')
             infile.write('surf_specs_names\t'.expandtabs(26) + " ".join(str(x) for x in surf_specs_names) + '\n')
@@ -104,7 +107,10 @@ class NewKMCJob:
                     infile.write(f"    {element}\n")
                 infile.write(f"  site_types {self.df_mechanism.loc[step, 'site_types']}\n")
                 pre_expon, pe_ratio = self.get_pre_expon(step=step, T=T, dict_scaling=dict_scaling)
-                infile.write(f"  pre_expon {pre_expon:.3e}\n")
+                if step in dict_scaling:
+                    infile.write(f"  pre_expon {pre_expon:.3e}   # scaled 1e-{dict_scaling[step]}\n")
+                else:
+                    infile.write(f"  pre_expon {pre_expon:.3e}\n")
                 infile.write(f"  pe_ratio {pe_ratio:.3e}\n")
                 infile.write(f"  activ_eng {self.df_mechanism.loc[step, 'activ_eng']:.2f}\n")
                 for keyword in ['prox_factor', 'angles']:  # optional keywords
@@ -176,7 +182,7 @@ class NewKMCJob:
                                             vib_list_fs=self.df_mechanism.loc[step, 'vib_list_fs'])
 
         if step in dict_scaling:
-            pe_fwd = pe_fwd * dict_scaling[step]
-            pe_rev = pe_rev * dict_scaling[step]
+            pe_fwd = pe_fwd * 10**(-dict_scaling[step])
+            pe_rev = pe_rev * 10**(-dict_scaling[step])
         pe_ratio = pe_fwd / pe_rev
         return pe_fwd, pe_ratio

@@ -53,7 +53,7 @@ def calc_ads(A_site, molec_mass, T, vib_list_is, vib_list_ts, vib_list_fs, inert
     q_trans_2d_gas = A_site * 2 * pi * m * k * T / h ** 2
     q_el_gas = degeneracy
     q_vib_ads = get_q_vib(T=T, vib_list=vib_list_fs)
-    if not vib_list_ts:  # non-activated
+    if vib_list_ts == '[]':  # non-activated
         pe_fwd = A_site / sqrt(2 * pi * m * k * T)
         pe_rev = (q_el_gas * q_vib_gas * q_rot_gas * q_trans_2d_gas / q_vib_ads) * (k * T / h)
     else:  # activated
