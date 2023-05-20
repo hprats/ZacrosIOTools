@@ -43,8 +43,7 @@ With ZacrosIOTools, the input files for a ZACROS job can be prepared as follows:
     
     job.create_job_dir(path='/test/new_job', 
                        T=500,  # K
-                       p=10,   # bar
-                       dict_molar_fracs={'CO': 0.9, 'O2': 0.1, 'CO2': 0.0}, 
+                       dict_pressure={'CO': 1.1, 'O2': 0.01, 'CO2': 0.0}, # in bar
                        dict_scaling={'O2_ads': 0.01})          
 
 
