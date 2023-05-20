@@ -27,15 +27,13 @@ With ZacrosIOTools, the input files for a ZACROS job can be prepared as follows:
 
     from zacrosio.kmc_job import NewKMCJob
 
-    simulation_tags = {'snapshots': 'on time 5.e-1',
-                       'process_statistics': 'on time 1.e-2',
-                       'species_numbers': 'on time 5.e-3',
-                       'event_report': 'off',
-                       'max_steps': 1000000000,
-                       'max_time': 2.0,
-                       'wall_time': 86400}
-
-    job = NewKMCJob(simulation_tags=simulation_tags,
+    job = NewKMCJob(simulation_tags={'snapshots': 'on time 5.e-1',
+                                    'process_statistics': 'on time 1.e-2',
+                                    'species_numbers': 'on time 5.e-3',
+                                    'event_report': 'off',
+                                    'max_steps': 1000000000,
+                                    'max_time': 2.0,
+                                    'wall_time': 86400},
                     df_gas=pd.read_csv("gas_data.csv", index_col=0),
                     df_mechanism=pd.read_csv("mechanism_data.csv", index_col=0),
                     df_energetics=pd.read_csv("energetics_data.csv", index_col=0),
