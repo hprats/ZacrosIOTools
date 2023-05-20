@@ -75,9 +75,9 @@ This dataframe contains information about the steps included in the reaction mod
 - activ_eng (float): activation energy in eV, e.g. 1.02
 - prox_factor (float): proximity factor, e.g. 0.2    # default is 0.5
 - angles (str): angle between sites, e.g. 1-2-3:180  # default is None
-- vib_list_initial (list of floats): list of vibrational modes in meV for the initial state in meV, e.g. [332.7, 196.2, 70.5]
+- vib_list_is (list of floats): list of vibrational modes in meV for the initial state in meV, e.g. [332.7, 196.2, 70.5]
 - vib_list_ts (list of floats): list of vibrational modes in meV for the transition state in meV, e.g. [332.7, 196.2]. For non-activated adsorption, define this as an empty list i.e. []
-- vib_list_final (list of floats): list of vibrational modes in meV for the final state in meV, e.g. [332.7, 196.2, 70.5]
+- vib_list_fs (list of floats): list of vibrational modes in meV for the final state in meV, e.g. [332.7, 196.2, 70.5]
 
 Additional required columns for adsorption steps:
 - molecule (str): gas-phase molecule involved, e.g. CO
