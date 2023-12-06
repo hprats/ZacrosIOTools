@@ -1,12 +1,20 @@
 import ast
 import sys
-import numpy as np
-import matplotlib.pyplot as plt
 from math import sqrt, exp
 from scipy.constants import pi, N_A, k, h, physical_constants
 
 k_eV = physical_constants["Boltzmann constant in eV/K"][0]
 atomic_mass = physical_constants["atomic mass constant"][0]
+
+
+def write_header(path):
+    with open(path, 'w') as infile:
+        infile.write('############################################################################\n')
+        infile.write('# Zacros Input File generated with the ZacrosIOTools                       #\n')
+        infile.write('# https://github.com/hprats/ZacrosIOTools.git                              #\n')
+        infile.write('#                                                                          #\n')
+        infile.write('# Hector Prats, PhD                                                        #\n')
+        infile.write('############################################################################\n\n')
 
 
 def get_q_vib(T, vib_list):
@@ -72,16 +80,3 @@ def calc_surf_proc(T, vib_list_is, vib_list_ts, vib_list_fs):
     pe_fwd = (q_vib_ts / q_vib_initial) * (k * T / h)
     pe_rev = (q_vib_ts / q_vib_final) * (k * T / h)
     return pe_fwd, pe_rev
-
-
-def plot_coverage(path):
-    f = open(f"{path}/specnum_output.txt")
-    header = f.readline().split()
-    f.close()
-    data = np.loadtxt("{path}/specnum_output.txt", skiprows=1)
-    for i in range(5, len(header)):
-        plt.plot(xdata=data[:, 2], ydata=data[:, i], label=header[i])
-    plt.xlabel(header[2])
-    plt.ylabel("Number of species")
-    plt.legend()
-    plt.show()
